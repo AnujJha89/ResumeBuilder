@@ -1,0 +1,467 @@
+@using Microsoft.AspNetCore.Identity
+@using ResumeBuilder.Core.Entities
+@using ResumeBuilder.Core.Interfaces
+@inject UserManager<ApplicationUser> UserManager
+@inject IResumeService ResumeService
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
+    var email = user?.Email;
+    var phone = user?.PhoneNumber;
+
+    var resumes = user != null 
+        ? await ResumeService.GetResumesByUserIdAsync(user.Id) 
+        : Enumerable.Empty<Resume>();
+
+    var resumeCount = resumes.Count();
+    var hasName = !string.IsNullOrEmpty(user?.FullName);
+    var hasEmail = !string.IsNullOrEmpty(user?.Email);
+    var hasPhone = !string.IsNullOrEmpty(user?.PhoneNumber);
+    var hasResumes = resumeCount > 0;
+    var hasSummary = resumes.Any(r => !string.IsNullOrEmpty(r.ProfessionalSummary));
+    var hasSocials = resumes.Any(r => !string.IsNullOrEmpty(r.GitHubUrl) || !string.IsNullOrEmpty(r.LinkedInUrl));
+
+    int strength = 0;
+    if (hasName) strength += 15;
+    if (hasEmail) strength += 15;
+    if (hasPhone) strength += 15;
+    if (hasResumes) strength += 30;
+    if (hasSummary) strength += 15;
+    if (hasSocials) strength += 10;
+
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<!-- Sidebar Navigation -->
+<div class="sidebar-wrapper">
+    <!-- Card 1: User Profile -->
+    <div class="profile-card text-center shadow-sm">
+
+        
+        <div class="avatar-placeholder rounded-circle bg-primary bg-opacity-75 d-inline-flex align-items-center justify-content-center text-white fw-bold mb-2" style="width: 50px; height: 50px; font-size: 1.25rem;">
+            @displayName[0].ToString().ToUpper()
+        </div>
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-0">
+            <h6 class="mb-0 fw-bold font-monospace text-truncate" style="max-width: 160px;" title="@displayName">@displayName</h6>
+            <!-- Small icon toggle next to user's name to submit logout -->
+            <button type="button" class="signout-toggle-btn" onclick="globalSignOut(event);" title="Sign Out">
+                <i class="bi bi-power fs-6"></i>
+            </button>
+        </div>
+        <p class="text-secondary small mb-0 font-monospace text-truncate" style="font-size: 0.7rem;" title="@user?.Email">@user?.Email</p>
+    </div>
+
+    <!-- Card 2: Llama Companion -->
+    <div class="llama-container-card shadow-sm" id="llamaWidget">
+        <h6 class="font-monospace text-secondary small-text fw-semibold tracking-wider text-uppercase mb-1.5">Llama Companion</h6>
+        
+        <!-- Speech Bubble -->
+        <div class="llama-speech-bubble mb-2 bubble-hidden" id="llamaBubble">
+            Namaste! Ready to build a job-winning resume today?
+        </div>
+        
+        <div class="position-relative" style="height: 90px;" onclick="llamaReactToClick()">
+            <!-- SVG Llama Drawing -->
+            <svg class="llama-svg" viewBox="0 0 100 120" width="75" height="90" style="cursor: pointer;">
+                <!-- Spit Particle -->
+                <circle class="spit-particle" id="llamaSpit" cx="70" cy="42" r="4" />
+                <!-- Grass Particle -->
+                <g class="grass-particle" id="llamaGrass">
+                    <line x1="68" y1="42" x2="80" y2="30" stroke="#a3e635" stroke-width="2.5" />
+                    <line x1="68" y1="42" x2="75" y2="50" stroke="#a3e635" stroke-width="2.5" />
+                </g>
+                <!-- Body/Back -->
+                <rect x="15" y="80" width="50" height="40" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="2.5" />
+                <rect x="15" y="80" width="50" height="40" rx="10" fill="#fed7aa" opacity="0.1" />
+                
+                <!-- Neck -->
+                <path class="llama-neck" d="M 35 90 L 35 45 L 50 45 L 50 90 Z" fill="#f8fafc" stroke="#64748b" stroke-width="2.5" />
+                
+                <!-- Ears -->
+                <path class="llama-ear-l" d="M 37 25 L 34 5 L 40 10 L 41 25 Z" fill="#f8fafc" stroke="#64748b" stroke-width="2.5" />
+                <path class="llama-ear-r" d="M 43 25 L 46 5 L 48 10 L 47 25 Z" fill="#f8fafc" stroke="#64748b" stroke-width="2.5" />
+                
+                <!-- Head -->
+                <rect class="llama-head" x="30" y="22" width="38" height="26" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="2.5" />
+                
+                <!-- Muzzle -->
+                <rect class="llama-muzzle" x="52" y="32" width="20" height="14" rx="4" fill="#fed7aa" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Mouth line -->
+                <line class="llama-mouth" x1="58" y1="40" x2="68" y2="40" stroke="#64748b" stroke-width="2" />
+                
+                <!-- Eye -->
+                <circle class="llama-eye" cx="46" cy="31" r="2.5" fill="#1e293b" />
+            </svg>
+        </div>
+        
+        <div class="d-flex gap-1 justify-content-center mt-2.5">
+            <button type="button" class="btn btn-outline-light btn-sm font-monospace px-2 py-1" style="font-size:0.65rem; border-radius: 8px !important;" onclick="feedLlamaBtn(event);">
+                Feed
+            </button>
+            <button type="button" class="btn btn-outline-info btn-sm font-monospace px-2 py-1" style="font-size:0.65rem; border-radius: 8px !important;" onclick="askLlamaBtn(event);">
+                Advice
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm font-monospace px-2 py-1" style="font-size:0.65rem; border-radius: 8px !important;" onclick="annoyLlamaBtn(event);">
+                Annoy
+            </button>
+        </div>
+    </div>
+
+    <!-- Card 3: Hiring Calendar -->
+    <div class="hiring-tracker-card shadow-sm" id="hiringWidget" onclick="openHiringModal()">
+        <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 0.75rem !important;">
+            <h6 class="font-monospace text-secondary small-text fw-semibold tracking-wider text-uppercase mb-0">Hiring Calendar</h6>
+        </div>
+        <div class="d-flex align-items-center my-1.5" style="gap: 20px;">
+            <div class="calendar-display" style="width: 42px; height: 46px;">
+                <div class="calendar-header" id="hiringMonthAbbrev" style="font-size: 0.6rem; padding: 1px 0;">JUN</div>
+                <div class="calendar-day" id="hiringMonthDay" style="font-size: 0.95rem;">14</div>
+            </div>
+            <div class="overflow-hidden flex-grow-1">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-white text-truncate" id="hiringMonthTitle">June Hiring</h6>
+                    <i class="bi bi-arrow-right-short text-secondary fs-5"></i>
+                </div>
+                <small class="text-secondary text-truncate d-block" id="hiringSectorsSnippet" style="font-size: 0.7rem;">Tech & Finance spike</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS-Animated Hiring Insights Modal Overlay -->
+<div id="customHiringModal" class="custom-modal-overlay" onclick="closeHiringModal(event)">
+    <div class="custom-modal-card p-4 rounded-4" onclick="event.stopPropagation()">
+        <button class="custom-modal-close" onclick="closeHiringModal(event)">&times;</button>
+        <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom border-secondary border-opacity-10">
+            <div class="modal-calendar-display">
+                <div class="modal-calendar-header" id="modalMonthAbbrev">JUN</div>
+                <div class="modal-calendar-body"><i class="bi bi-briefcase-fill"></i></div>
+            </div>
+            <div>
+                <h4 class="mb-0 fw-bold" id="modalMonthTitle">June Hiring Hub</h4>
+            </div>
+        </div>
+        
+        <div class="modal-body-content">
+            <h6 class="text-uppercase text-secondary font-monospace tracking-wider small-text mb-2">Hiring Season Details</h6>
+            <p class="fw-semibold text-primary-theme mb-3" id="modalSeasonName">Summer Grad & Intern Cycle</p>
+            
+            <h6 class="text-uppercase text-secondary font-monospace tracking-wider small-text mb-2">Top Hiring Companies</h6>
+            <div class="d-flex flex-wrap gap-2 mb-3" id="modalCompanies">
+                <!-- populated by JS -->
+            </div>
+            
+            <h6 class="text-uppercase text-secondary font-monospace tracking-wider small-text mb-2">Key Job Sectors</h6>
+            <div id="modalSectors" class="mb-3">
+                <!-- populated by JS -->
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary border-opacity-10">
+            <button class="btn btn-outline-secondary font-monospace px-4 btn-sm" onclick="closeHiringModal(event)">Close</button>
+            <a href="/Resume/Create" class="btn btn-primary font-monospace px-4 btn-sm text-white" style="border-radius: 8px !important;">Build Resume ➔</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const hiringData = {
+            0: {
+                abbrev: "JAN",
+                season: "Q1 IT & Service hiring",
+                intensity: "High Activity",
+                badgeClass: "text-success bg-success-subtle border border-success-subtle",
+                sectors: ["Backend Development", "Cloud Engineers", "Systems Analyst"],
+                companies: ["TCS", "Infosys", "Wipro", "Accenture India"],
+                openings: "15,000+ active roles in India",
+                advice: "Indian service majors and MNCs start their new fiscal plans. Focus on basic technical competencies."
+            },
+            1: {
+                abbrev: "FEB",
+                season: "Product Tech & Startups",
+                intensity: "High Activity",
+                badgeClass: "text-success bg-success-subtle border border-success-subtle",
+                sectors: ["Software Engineer (SDE-1/2)", "Full-Stack Dev", "Mobile Apps"],
+                companies: ["PhonePe", "Razorpay", "Flipkart", "Paytm"],
+                openings: "8,200+ roles active in India",
+                advice: "Fintechs and major Indian internet platforms open growth headcounts. Optimize resumes for scale projects."
+            },
+            2: {
+                abbrev: "MAR",
+                season: "MNC Spring Openings",
+                intensity: "Peak Season",
+                badgeClass: "text-danger bg-danger-subtle border border-danger-subtle",
+                sectors: ["Cloud Solutions Architect", "DevOps Engineer", "Cybersecurity Analyst"],
+                companies: ["Amazon India", "Microsoft India", "Adobe India", "Oracle India"],
+                openings: "12,500+ roles active in India",
+                advice: "Global tech giants in Bangalore and Hyderabad run major spring placement drives. Highlight problem solving skills."
+            },
+            3: {
+                abbrev: "APR",
+                season: "Q2 Digital Expansion",
+                intensity: "High Activity",
+                badgeClass: "text-success bg-success-subtle border border-success-subtle",
+                sectors: ["Full-Stack Developers", "UI/UX Designers", "Product Managers"],
+                companies: ["Zomato", "Swiggy", "Zepto", "Meesho"],
+                openings: "9,000+ positions open in India",
+                advice: "Consumer-tech companies expand logistics and digital platforms. Tailor your resume to user-facing system metrics."
+            },
+            4: {
+                abbrev: "MAY",
+                season: "Telecom & Hardware Tech",
+                intensity: "Moderate Activity",
+                badgeClass: "text-warning bg-warning-subtle border border-warning-subtle",
+                sectors: ["AI/ML Engineer", "Network Engineer", "Automation QA"],
+                companies: ["Reliance Jio", "Bharti Airtel", "Tata Communications"],
+                openings: "7,000+ active roles in India",
+                advice: "Excellent period for graduates and mid-level roles in large Indian telecom conglomerates."
+            },
+            5: {
+                abbrev: "JUN",
+                season: "Off-Campus Fresher Drive",
+                intensity: "Peak Season",
+                badgeClass: "text-danger bg-danger-subtle border border-danger-subtle",
+                sectors: ["Associate Software Engineer", "Graduate Trainee", "Web Developer"],
+                companies: ["HCLTech", "Cognizant India", "Capgemini India", "Tech Mahindra"],
+                openings: "20,000+ active roles in India",
+                advice: "Mass recruitment off-campus drives open for fresh Indian engineering graduates. Build a clean, single-page resume."
+            },
+            6: {
+                abbrev: "JUL",
+                season: "Indian SaaS Recruitment",
+                intensity: "Moderate Activity",
+                badgeClass: "text-warning bg-warning-subtle border border-warning-subtle",
+                sectors: ["Frontend Dev (React/Angular)", "Product Support", "SaaS Backend"],
+                companies: ["Zoho", "Freshworks", "CRED", "BrowserStack"],
+                openings: "6,000+ active roles in India",
+                advice: "SaaS hubs in Chennai and Bangalore recruit mid-market specialists. Highlight customer-centric solutions."
+            },
+            7: {
+                abbrev: "AUG",
+                season: "MNC Consulting Drives",
+                intensity: "High Activity",
+                badgeClass: "text-success bg-success-subtle border border-success-subtle",
+                sectors: ["Technology Consulting", "Salesforce Developers", "Data Analysts"],
+                companies: ["Deloitte India", "PwC India", "EY India", "KPMG India"],
+                openings: "11,000+ positions open in India",
+                advice: "Big 4 accounting/consulting firms start recruitment for enterprise platforms. Show process and client skills."
+            },
+            8: {
+                abbrev: "SEP",
+                season: "Pre-Festive Peak Hiring",
+                intensity: "Peak Season",
+                badgeClass: "text-danger bg-danger-subtle border border-danger-subtle",
+                sectors: ["Senior SDE", "Engineering Lead", "Data Scientist"],
+                companies: ["Google India", "Meta India", "Amazon India", "Flipkart"],
+                openings: "18,000+ active roles in India",
+                advice: "The busiest recruitment month before the Indian festive season. Highlight leadership and technical metrics."
+            },
+            9: {
+                abbrev: "OCT",
+                season: "Consumer Tech Expansion",
+                intensity: "High Activity",
+                badgeClass: "text-success bg-success-subtle border border-success-subtle",
+                sectors: ["Mobile Developers", "Site Reliability", "Security Engineers"],
+                companies: ["Swiggy", "Zomato", "Nykaa", "Paytm"],
+                openings: "10,000+ active roles in India",
+                advice: "Peak traffic for consumer platforms creates immediate support and development headcount needs."
+            },
+            10: {
+                abbrev: "NOV",
+                season: "Fintech Hires & Upgrades",
+                intensity: "Moderate Activity",
+                badgeClass: "text-warning bg-warning-subtle border border-warning-subtle",
+                sectors: ["API Integrations", "Security Engineers", "Web Developers"],
+                companies: ["Razorpay", "PayU", "Pine Labs", "Groww"],
+                openings: "5,500+ active roles in India",
+                advice: "Fintech product upgrades see strong demand for developers with payment gateway integration skills."
+            },
+            11: {
+                abbrev: "DEC",
+                season: "Startup Initial Headcount",
+                intensity: "Low Activity",
+                badgeClass: "text-secondary bg-secondary-subtle border border-secondary-subtle",
+                sectors: ["Full-Stack Dev", "EdTech Developers", "Technical Support"],
+                companies: ["UpGrad", "PhysicsWallah", "Unacademy", "Boutique Agencies"],
+                openings: "4,000+ active roles in India",
+                advice: "Corporate hiring slows, but Indian startups run agile hiring for immediate Q1 onboarding."
+            }
+        };
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        // Dynamically calculate current date values
+        const currentDate = new Date();
+        const currentMonthIndex = currentDate.getMonth(); // 0-11
+        const currentDay = currentDate.getDate(); // 1-31
+        
+        const monthData = hiringData[currentMonthIndex];
+        const monthName = months[currentMonthIndex];
+
+        // Populate sidebar widget
+        document.getElementById('hiringMonthAbbrev').innerText = monthData.abbrev;
+        document.getElementById('hiringMonthDay').innerText = currentDay;
+        document.getElementById('hiringMonthTitle').innerText = `${monthName} Hiring`;
+        document.getElementById('hiringSectorsSnippet').innerText = monthData.season;
+        
+        const badge = document.getElementById('hiringIntensityBadge');
+        if (badge) {
+            badge.innerText = monthData.intensity;
+            badge.className = `badge rounded-pill pulse-badge ${monthData.badgeClass}`;
+        }
+
+        // Populate modal data
+        window.openHiringModal = function () {
+            document.getElementById('modalMonthAbbrev').innerText = monthData.abbrev;
+            document.getElementById('modalMonthTitle').innerText = `${monthName} Hiring Hub`;
+            
+            document.getElementById('modalSeasonName').innerText = monthData.season;
+            
+            const advice = document.getElementById('modalAdvice');
+            if (advice) {
+                advice.innerText = monthData.advice;
+            }
+
+            // Companies
+            const compContainer = document.getElementById('modalCompanies');
+            compContainer.innerHTML = '';
+            monthData.companies.forEach(company => {
+                const span = document.createElement('span');
+                span.className = 'custom-company-badge';
+                span.innerText = company;
+                compContainer.appendChild(span);
+            });
+
+            // Sectors/Roles
+            const rolesContainer = document.getElementById('modalSectors');
+            rolesContainer.innerHTML = '';
+            monthData.sectors.forEach(role => {
+                const div = document.createElement('div');
+                div.className = 'custom-role-item';
+                div.innerHTML = `<i class="bi bi-check-circle-fill text-primary-theme"></i> ${role}`;
+                rolesContainer.appendChild(div);
+            });
+
+            const overlay = document.getElementById('customHiringModal');
+            overlay.classList.remove('d-none');
+            // Allow DOM to register removal of d-none for transition
+            setTimeout(() => {
+                overlay.classList.add('show-modal');
+            }, 10);
+        };
+
+        window.closeHiringModal = function (e) {
+            if (e) e.stopPropagation();
+            const overlay = document.getElementById('customHiringModal');
+            overlay.classList.remove('show-modal');
+            setTimeout(() => {
+                overlay.classList.add('d-none');
+            }, 300);
+        };
+
+        // Llama Companion Responses
+        const llamaGreetings = [
+            "Namaste! Ready to debug your life's code?",
+            "Hello! Let's get that resume to the top of the pile!",
+            "Hey! Need some resume chai?",
+            "Is your resume ATS-friendly or are we still hoping for miracles?",
+            "Pro Tip: Make sure your experience lists impact, not just duties!"
+        ];
+
+        const llamaAdvice = [
+            "Quantify impact! E.g. 'Reduced API latency by 40%'.",
+            "For Indian startups, showcase your end-to-end building capabilities.",
+            "Keep it strictly to 1 page if your experience is less than 5 years!",
+            "Use simple fonts. Graphic resumes with complex tables fail ATS.",
+            "Always align your resume keywords with the job description!",
+            "Use active verbs like Managed, Initiated, or Optimized instead of Assisted or Handled.",
+            "Organize sections chronologically, placing your most recent achievements at the top.",
+            "Include links to your professional profiles, GitHub repositories, or live project demos.",
+            "Avoid adding unnecessary personal details like marital status or birth date.",
+            "Focus on the specific technologies and tools you actually used in your projects.",
+            "Save and send your resume as a PDF to ensure formatting stays identical on all systems.",
+            "Write a compelling professional summary that highlights your key expertise in under three sentences."
+        ];
+
+        const llamaAnnoyed = [
+            "Ptu! Take that! Don't push straight to production!",
+            "Aah! Keep doing that and I'll spit on your keyboard!",
+            "Ouch! That's a null pointer exception in my feelings!",
+            "Hey! Stop clicking me and start building your resume!"
+        ];
+
+        let bubbleTimeout = null;
+
+        function showLlamaBubble(message) {
+            const bubble = document.getElementById('llamaBubble');
+            if (!bubble) return;
+            
+            if (bubbleTimeout) {
+                clearTimeout(bubbleTimeout);
+            }
+            
+            bubble.innerText = message;
+            bubble.classList.remove('bubble-hidden');
+            
+            bubbleTimeout = setTimeout(() => {
+                bubble.classList.add('bubble-hidden');
+            }, 5000);
+        }
+
+        // Show initial greeting and auto-hide
+        showLlamaBubble("Namaste! Ready to build a job-winning resume today?");
+
+        window.llamaReactToClick = function () {
+            const llama = document.getElementById('llamaWidget');
+            if (!llama || llama.classList.contains('chewing') || llama.classList.contains('spitting')) return;
+            
+            // Randomly blink or bob
+            llama.classList.add('chewing');
+            setTimeout(() => llama.classList.remove('chewing'), 800);
+            
+            const randomMsg = llamaGreetings[Math.floor(Math.random() * llamaGreetings.length)];
+            showLlamaBubble(randomMsg);
+        };
+
+        window.feedLlamaBtn = function (e) {
+            if (e) e.stopPropagation();
+            const llama = document.getElementById('llamaWidget');
+            if (!llama || llama.classList.contains('chewing') || llama.classList.contains('spitting')) return;
+            
+            llama.classList.add('chewing');
+            showLlamaBubble("Yum! That grass tasted fresh and satisfying.");
+            setTimeout(() => {
+                llama.classList.remove('chewing');
+            }, 1500);
+        };
+
+        window.annoyLlamaBtn = function (e) {
+            if (e) e.stopPropagation();
+            const llama = document.getElementById('llamaWidget');
+            if (!llama || llama.classList.contains('chewing') || llama.classList.contains('spitting')) return;
+            
+            llama.classList.add('spitting');
+            const randomSpit = llamaAnnoyed[Math.floor(Math.random() * llamaAnnoyed.length)];
+            showLlamaBubble(randomSpit);
+            setTimeout(() => {
+                llama.classList.remove('spitting');
+            }, 800);
+        };
+
+        window.askLlamaBtn = function (e) {
+            if (e) e.stopPropagation();
+            const llama = document.getElementById('llamaWidget');
+            if (!llama || llama.classList.contains('chewing') || llama.classList.contains('spitting')) return;
+            
+            llama.classList.add('chewing');
+            const randomAdvice = llamaAdvice[Math.floor(Math.random() * llamaAdvice.length)];
+            showLlamaBubble(`Llama says: "${randomAdvice}"`);
+            setTimeout(() => {
+                llama.classList.remove('chewing');
+            }, 1200);
+        };
+    })();
+</script>

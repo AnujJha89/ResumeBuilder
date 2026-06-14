@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ResumeBuilder.Core/ResumeBuilder.Core.csproj" />
+  <Project Path="ResumeBuilder.Infrastructure/ResumeBuilder.Infrastructure.csproj" />
+  <Project Path="ResumeBuilder.Web/ResumeBuilder.Web.csproj" />
+  <Project Path="ResumeBuilder.Tests/ResumeBuilder.Tests.csproj" />
+</Solution>

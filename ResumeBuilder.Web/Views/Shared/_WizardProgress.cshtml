@@ -1,0 +1,126 @@
+@{
+    var activeTab = ViewBag.ActiveTab as string ?? "personal";
+    int percent = 10;
+    string stepTitle = "Personal Information";
+    int stepNumber = 1;
+    string stepIcon = "bi-person-vcard";
+
+    switch (activeTab)
+    {
+        case "personal":
+            percent = 10;
+            stepTitle = "Personal Information";
+            stepNumber = 1;
+            stepIcon = "bi-person-vcard";
+            break;
+        case "summary":
+            percent = 22;
+            stepTitle = "Professional Summary";
+            stepNumber = 2;
+            stepIcon = "bi-file-earmark-text";
+            break;
+        case "education":
+            percent = 33;
+            stepTitle = "Academic Background";
+            stepNumber = 3;
+            stepIcon = "bi-mortarboard";
+            break;
+        case "skills":
+            percent = 44;
+            stepTitle = "Technical Skills";
+            stepNumber = 4;
+            stepIcon = "bi-lightning-charge";
+            break;
+        case "projects":
+            percent = 55;
+            stepTitle = "Projects";
+            stepNumber = 5;
+            stepIcon = "bi-code-slash";
+            break;
+        case "experience":
+            percent = 66;
+            stepTitle = "Work Experience";
+            stepNumber = 6;
+            stepIcon = "bi-briefcase";
+            break;
+        case "certifications":
+            percent = 77;
+            stepTitle = "Certifications";
+            stepNumber = 7;
+            stepIcon = "bi-award";
+            break;
+        case "achievements":
+            percent = 88;
+            stepTitle = "Achievements & Honors";
+            stepNumber = 8;
+            stepIcon = "bi-trophy";
+            break;
+        case "preview":
+            percent = 100;
+            stepTitle = "Review & Compile";
+            stepNumber = 9;
+            stepIcon = "bi-file-earmark-pdf";
+            break;
+    }
+
+    // Dynamic Wavy Circular Path Generator
+    Func<double, double, double, double, int, string> getWavyPath = (cx, cy, r, amp, waves) =>
+    {
+        var points = new List<string>();
+        int steps = waves * 12; // Retains smooth curve rendering
+        for (int i = 0; i <= steps; i++)
+        {
+            double angle = (i * 2.0 * Math.PI) / steps;
+            double currentR = r + amp * Math.Sin(waves * angle);
+            double x = cx + currentR * Math.Cos(angle);
+            double y = cy + currentR * Math.Sin(angle);
+            points.Add($"{(i == 0 ? "M" : "L")} {x:F2} {y:F2}");
+        }
+        return string.Join(" ", points) + " Z";
+    };
+
+    // Generates a cleaner 8-wave track bounding safely away from the center icon
+    string wavyPath = getWavyPath(35, 35, 25.5, 1.5, 8);
+
+    // Exact dash tracking length calculation for 8 ripples
+    double approximateWavyLength = 161.5;
+    double offset = approximateWavyLength - ((double)percent / 100.0 * approximateWavyLength);
+}
+
+<div class="circular-progress-widget d-flex align-items-center gap-3 mb-4 p-3 rounded-4">
+    <div class="position-relative d-inline-flex align-items-center justify-content-center"
+         style="width: 70px; height: 70px; flex-shrink: 0;">
+
+        <svg class="progress-ring" width="70" height="70" style="overflow: visible; transform: rotate(-90deg);">
+            <path d="@wavyPath" stroke="var(--bs-primary)" stroke-opacity="0.12" stroke-width="2.5"
+                  fill="transparent" />
+
+            <path d="@wavyPath" stroke="var(--bs-primary)" stroke-width="3.5" stroke-linecap="round" fill="transparent"
+                  style="stroke-dasharray: @approximateWavyLength; 
+            stroke-dashoffset: @offset; 
+            transition: stroke-dashoffset 0.4s ease-in-out;" />
+        </svg>
+
+        <div class="position-absolute d-flex align-items-center justify-content-center  rounded-3 shadow-sm"
+             style="width: 38px; height: 38px;">
+            <i class="bi @stepIcon text-primary" style="font-size: 1.25rem;"></i>
+        </div>
+
+        <span
+            class="position-absolute badge rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+            style="bottom: -2px; right: -2px; width: 22px; height: 22px; font-size: 0.7rem; font-weight: bold; border: 2px solid var(--bs-body-bg, #fbf1ec); z-index: 5;">
+            @stepNumber
+        </span>
+    </div>
+
+    <div class="flex-grow-1">
+        <div class="text-muted small font-monospace tracking-wider text-uppercase" style="font-size: 0.75rem;">Step
+            @stepNumber of 9</div>
+            <h5 class="fw-bold m-0 text-white-90" style="letter-spacing: -0.01em;">@stepTitle</h5>
+        </div>
+
+        <div class="text-end">
+            <div class="fs-4 fw-bold text-primary font-monospace">@percent%</div>
+            <div class="text-muted small font-monospace">completed</div>
+        </div>
+    </div>

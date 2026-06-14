@@ -1,0 +1,141 @@
+@model IEnumerable<ResumeBuilder.Core.Entities.Education>
+@{
+    var resumeId = (int)ViewBag.ResumeId;
+    ViewData["Title"] = $"Educations - {ViewBag.ResumeTitle}";
+    var newEducation = new ResumeBuilder.Web.ViewModels.EducationViewModel { ResumeId = resumeId };
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Academic History</h3>
+                <p class="text-secondary">Add graduation, intermediate, and secondary school details to your resume.</p>
+            </div>
+
+            <!-- Existing Entries -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary font-monospace mb-3">Current Academic Milestones</h5>
+                @if (Model == null || !Model.Any())
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 p-4 text-center">
+                        
+                        <p class="text-secondary mb-0">No academic items have been added yet. Please use the form below to register your records.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 overflow-hidden">
+                        <div class="row notion-list-header px-4 pt-3 fw-bold small font-monospace">
+                            <div class="col-md-4">Degree / School</div>
+                            <div class="col-md-4">Institution / Board</div>
+                            <div class="col-md-2 text-center">Passing Year</div>
+                            <div class="col-md-2 text-end">Actions</div>
+                        </div>
+                        @foreach (var edu in Model)
+                        {
+                            <div class="row notion-row align-items-center px-4 font-monospace">
+                                <div class="col-md-4 fw-bold">@edu.Degree</div>
+                                <div class="col-md-4 text-white-50">@edu.InstitutionName <br /><small class="text-secondary">@edu.BoardOrUniversity</small></div>
+                                <div class="col-md-2 text-center text-primary">@edu.PassingYear <br /><span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-20 small mt-1">@edu.PercentageOrCGPA</span></div>
+                                <div class="col-md-2 text-end d-flex justify-content-end gap-3">
+                                    <a asp-action="EditEducation" asp-route-id="@edu.Id" class="action-icon text-decoration-none" title="Edit entry">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="DeleteEducation" asp-route-id="@edu.Id" method="post" onsubmit="return confirm('Delete this record?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-icon text-danger border-0 bg-transparent p-0" title="Delete entry">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Insertion Form -->
+            <div class="border-top border-secondary border-opacity-25 pt-4">
+                <h5 class="fw-bold text-primary font-monospace mb-4">Add Academic Entry</h5>
+                <form asp-action="AddEducation" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ResumeId" value="@resumeId" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <select name="Degree" class="form-select bg-transparent text-white border-secondary rounded-3" required>
+                                    <option value="Graduation">Graduation</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Matriculation">Matriculation</option>
+                                </select>
+                                <label class="text-secondary">Degree / School Level</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="InstitutionName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Institution" required />
+                                <label class="text-secondary">Institution (School or College Name)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="BoardOrUniversity" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Board" required />
+                                <label class="text-secondary">Board or University (e.g. CBSE, DTU, IPU)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating text-dark">
+                                <input name="PassingYear" type="number" min="1900" max="2100" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Year" required />
+                                <label class="text-secondary">Passing Year</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating text-dark">
+                                <input name="PercentageOrCGPA" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="CGPA" required />
+                                <label class="text-secondary">CGPA or % (e.g. 9.4, 91%)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-outline-primary px-4 font-monospace hover-lift">
+                            Add Entry 
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                <a asp-action="Summary" asp-route-resumeId="@resumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a asp-action="Skills" asp-route-resumeId="@resumeId" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                    Save & Continue <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

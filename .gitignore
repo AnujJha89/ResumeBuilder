@@ -1,0 +1,46 @@
+## Ignore Visual Studio temporary files, build results, and user settings
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+asmdir/
+bin/
+obj/
+
+# Visual Studio cache, logs, and settings
+.vs/
+.vs*
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+# Mono/MSBuild/Dotnet build files
+.mono/
+.metadata/
+*.sln.metadata
+*.slnx.metadata
+.config/
+.idea/
+.vscode/
+
+# Output files
+*.log
+*.bak
+*.cache
+*.pdb
+*.exe
+*.dll
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

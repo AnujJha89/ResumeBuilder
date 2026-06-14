@@ -1,0 +1,322 @@
+@model ResumeBuilder.Core.Entities.Resume
+@{
+    ViewBag.ResumeId = Model.Id;
+    ViewBag.ResumeTitle = Model.Title;
+    ViewBag.ActiveTab = "preview";
+    ViewData["Title"] = $"Preview Resume: {Model.Title}";
+
+    // Resolve template name and thumbnail for fallback mapping
+    var templateName = Model.Template?.Name;
+    var thumbnailPath = Model.Template?.ThumbnailPath;
+    if (string.IsNullOrEmpty(templateName))
+    {
+        templateName = Model.TemplateId switch
+        {
+            1 => "Classic Minimalist",
+            2 => "Modern Professional",
+            3 => "Executive Elegant",
+            4 => "Tech Developer",
+            5 => "Creative Portfolio",
+            6 => "Academic CV",
+            7 => "Stylish Minimal",
+            _ => "Classic Minimalist"
+        };
+        thumbnailPath = Model.TemplateId switch
+        {
+            1 => "/template_thumbnails/classic.png",
+            2 => "/template_thumbnails/modern_professional.png",
+            3 => "/template_thumbnails/executive_elegant.png",
+            4 => "/template_thumbnails/tech_developer.png",
+            5 => "/template_thumbnails/creative_portfolio.png",
+            6 => "/template_thumbnails/academic_cv.png",
+            7 => "/template_thumbnails/stylish_minimal.png",
+            _ => "/template_thumbnails/classic.png"
+        };
+    }
+}
+@Html.AntiForgeryToken()
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mx-4 mt-3 rounded-3 border-0" role="alert"
+         style="background: rgba(239,68,68,0.15); border-left: 3px solid #ef4444 !important;">
+        
+        <strong>PDF Error:</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold tracking-tight">Review &amp; Download</h3>
+                    <p class="text-secondary">Verify all details of your resume below. Click "Download PDF" to generate and download your professional resume.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="DownloadPdf" asp-route-resumeId="@Model.Id"
+                       class="btn btn-success px-4 py-2 fw-bold font-monospace hover-lift"
+                       title="Download your resume as a PDF file">
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Active Template Selector -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary font-monospace mb-3">Active Resume Template</h5>
+                <div class="template-active-slot"
+                     id="templateActiveSlot"
+                     role="button"
+                     aria-label="Change resume template"
+                     tabindex="0"
+                     data-selected-id="@Model.TemplateId">
+                    <div class="slot-thumbnail" id="slotThumbnail">
+                        @if (!string.IsNullOrEmpty(thumbnailPath))
+                        {
+                            <img src="@thumbnailPath" alt="@templateName thumbnail" id="slotThumbImg" />
+                        }
+                        
+                    </div>
+                    <div class="slot-info">
+                        <div class="slot-label">Active Template</div>
+                        <div class="slot-name" id="slotName">@templateName</div>
+                        <div class="slot-desc" id="slotDesc">Click to browse or switch templates mid-way</div>
+                    </div>
+                    <div class="slot-cta">
+                        <span>Change</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HTML CV Mockup Sheet -->
+            <div class="mx-auto w-100" style="max-width: 820px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25); background: white;">
+                <iframe src="/Resume/RenderHtml?resumeId=@Model.Id" style="width: 100%; height: 1130px; border: none; background: white; display: block; transition: opacity 0.2s ease;"></iframe>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                <a asp-action="Achievements" asp-route-resumeId="@Model.Id" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                    Finish Resume
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================
+     TEMPLATE CAROUSEL OVERLAY
+     ====================================================== -->
+<div class="carousel-overlay" id="carouselOverlay" aria-modal="true" role="dialog" aria-label="Select Resume Template">
+    <div class="carousel-sheet" id="carouselSheet">
+        <!-- Drag handle -->
+        <div class="carousel-handle"></div>
+
+        <!-- Header -->
+        <div class="carousel-header text-white">
+            <div class="carousel-header-title">
+                
+                Choose a Resume Template
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="carousel-nav">
+                    <div class="carousel-arrow" id="carouselPrev" title="Previous" role="button" aria-label="Scroll left">
+                        <i class="bi bi-chevron-left"></i>
+                    </div>
+                    <div class="carousel-arrow" id="carouselNext" title="Next" role="button" aria-label="Scroll right">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+                <button class="carousel-close-btn" id="carouselCloseBtn" aria-label="Close template picker">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable track -->
+        <div class="carousel-track-wrapper">
+            <div class="carousel-track" id="carouselTrack">
+                @if (ViewBag.AvailableTemplates != null)
+                {
+                    foreach (var template in ViewBag.AvailableTemplates)
+                    {
+                        var isActive = template.Id == Model.TemplateId;
+                        <div class="carousel-card @(isActive ? "is-active" : "")"
+                             data-template-id="@template.Id"
+                             data-template-name="@template.Name"
+                             data-template-img="@template.ThumbnailPath"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Select @template.Name template"
+                             aria-pressed="@(isActive ? "true" : "false")">
+                            <div class="carousel-card-thumb">
+                                @if (!string.IsNullOrEmpty(template.ThumbnailPath))
+                                {
+                                    <img src="@template.ThumbnailPath" alt="@template.Name preview" loading="lazy" />
+                                }
+                                
+                            </div>
+                            <div class="carousel-card-body">
+                                <div class="carousel-card-name text-white">@template.Name</div>
+                                <div class="carousel-card-check">
+                                    <i class="bi bi-check2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    (function () {
+        const templateDescs = {
+            "Classic Minimalist":   "A timeless, single-column layout using Lora serif headings and Inter sans-serif body. Perfect for traditional, formal industries.",
+            "Modern Professional":  "A clean, asymmetric layout featuring professional blue highlights and a sidebar design. Supports circular profile photo.",
+            "Executive Elegant":    "A premium layout with deep navy blue and gold accents, using serif typography. Ideal for executives and leadership roles.",
+            "Tech Developer":       "A compact monospace layout with emerald green skill badges. Built for engineers.",
+            "Creative Portfolio":   "A vibrant layout with a pink/teal sidebar. Tailored for designers and marketing professionals.",
+            "Academic CV":          "A formal, high-density serif layout for research, CVs, and academic roles.",
+            "Stylish Minimal":      "A sleek, lightweight sans-serif layout with minimal accents for clean, modern aesthetics."
+        };
+
+        const resumeId      = @Model.Id;
+        const overlay       = document.getElementById('carouselOverlay');
+        const track         = document.getElementById('carouselTrack');
+        const activeSlot    = document.getElementById('templateActiveSlot');
+        const slotName      = document.getElementById('slotName');
+        const slotDesc      = document.getElementById('slotDesc');
+        const slotThumbnail = document.getElementById('slotThumbnail');
+        const prevBtn       = document.getElementById('carouselPrev');
+        const nextBtn       = document.getElementById('carouselNext');
+        const closeBtn      = document.getElementById('carouselCloseBtn');
+        const cards         = track.querySelectorAll('.carousel-card');
+        const previewIframe = document.querySelector('iframe');
+
+        // Initial description
+        if (slotName && slotDesc) {
+            slotDesc.textContent = templateDescs[slotName.textContent.trim()] || 'Click to browse or switch templates mid-way';
+        }
+
+        function openCarousel() {
+            overlay.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+
+            const activeCard = track.querySelector('.carousel-card.is-active');
+            if (activeCard) {
+                requestAnimationFrame(() => {
+                    const trackRect  = track.getBoundingClientRect();
+                    const cardRect   = activeCard.getBoundingClientRect();
+                    const scrollLeft = activeCard.offsetLeft - (trackRect.width / 2) + (cardRect.width / 2);
+                    track.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                });
+            }
+        }
+
+        function closeCarousel() {
+            overlay.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        activeSlot.addEventListener('click', openCarousel);
+        activeSlot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCarousel(); }});
+        closeBtn.addEventListener('click', closeCarousel);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeCarousel(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeCarousel(); });
+
+        const SCROLL_STEP = 220;
+        prevBtn.addEventListener('click', () => track.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' }));
+        nextBtn.addEventListener('click', () => track.scrollBy({ left:  SCROLL_STEP, behavior: 'smooth' }));
+
+        function selectTemplate(card) {
+            const templateId   = card.getAttribute('data-template-id');
+            const name = card.getAttribute('data-template-name');
+            const img  = card.getAttribute('data-template-img') || '';
+
+            // 1. Instantly update iframe preview with the new templateId parameter for butter-smooth update
+            if (previewIframe) {
+                previewIframe.style.opacity = '0.5';
+                previewIframe.src = `/Resume/RenderHtml?resumeId=${resumeId}&templateId=${templateId}`;
+                previewIframe.onload = () => {
+                    previewIframe.style.opacity = '1';
+                };
+            }
+
+            // 2. Perform AJAX request to immediately update global state
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            fetch('/Resume/UpdateTemplate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `resumeId=${resumeId}&templateId=${templateId}`
+            })
+            .then(res => {
+                if (!res.ok) console.error("Failed to update template backend state");
+            })
+            .catch(err => console.error("Error updating template:", err));
+
+            // 3. Update parent page selector visual state
+            if (slotName) slotName.textContent = name;
+            if (slotDesc) slotDesc.textContent = templateDescs[name] || '';
+
+            if (slotThumbnail) {
+                slotThumbnail.style.display = '';
+                let imgEl = slotThumbnail.querySelector('img');
+                let iconEl = slotThumbnail.querySelector('i');
+                if (img) {
+                    if (!imgEl) {
+                        imgEl = document.createElement('img');
+                        imgEl.id = 'slotThumbImg';
+                        slotThumbnail.innerHTML = '';
+                        slotThumbnail.appendChild(imgEl);
+                    }
+                    imgEl.src = img;
+                    imgEl.alt = name + ' thumbnail';
+                    if (iconEl) iconEl.remove();
+                } else {
+                    if (!iconEl) {
+                        slotThumbnail.innerHTML = '<i class="bi bi-file-earmark-pdf" id="slotThumbIcon"></i>';
+                    }
+                    if (imgEl) imgEl.remove();
+                }
+            }
+
+            // Update active states on cards
+            cards.forEach(c => {
+                const isThis = c.getAttribute('data-template-id') === templateId;
+                c.classList.toggle('is-active', isThis);
+                c.setAttribute('aria-pressed', isThis ? 'true' : 'false');
+            });
+
+            // Pop animation and dismiss
+            card.classList.add('selecting');
+            card.addEventListener('animationend', () => card.classList.remove('selecting'), { once: true });
+            setTimeout(closeCarousel, 240);
+        }
+
+        cards.forEach(card => {
+            card.addEventListener('click', () => selectTemplate(card));
+            card.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTemplate(card); }
+            });
+        });
+    })();
+    </script>
+}

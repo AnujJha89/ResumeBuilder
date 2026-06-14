@@ -1,0 +1,142 @@
+@model IEnumerable<ResumeBuilder.Core.Entities.Project>
+@{
+    var resumeId = (int)ViewBag.ResumeId;
+    ViewData["Title"] = $"Projects - {ViewBag.ResumeTitle}";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Projects</h3>
+                <p class="text-secondary">Add key software development or college academic projects showcasing your engineering accomplishments.</p>
+            </div>
+
+            <!-- Existing Projects List -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary font-monospace mb-3">Current Projects</h5>
+                @if (Model == null || !Model.Any())
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 p-4 text-center">
+                    
+                        <p class="text-secondary mb-0">No projects added yet. Please use the form below to register your items.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 overflow-hidden">
+                        <div class="row notion-list-header px-4 pt-3 fw-bold small font-monospace">
+                            <div class="col-md-4">Project Title & Link</div>
+                            <div class="col-md-4">Technologies</div>
+                            <div class="col-md-2 text-center">Duration</div>
+                            <div class="col-md-2 text-end">Actions</div>
+                        </div>
+                        @foreach (var proj in Model)
+                        {
+                            <div class="row notion-row align-items-center px-4 font-monospace">
+                                <div class="col-md-4">
+                                    <span class="fw-bold text-white">@proj.ProjectTitle</span>
+                                    @if (!string.IsNullOrEmpty(proj.GitHubLink))
+                                    {
+                                        <br /><a href="@proj.GitHubLink" target="_blank" class="text-primary text-decoration-none small hover-white" style="font-size: 0.8rem;"><i class="bi bi-github me-1"></i>GitHub</a>
+                                    }
+                                </div>
+                                <div class="col-md-4 text-white-50"><span class="badge bg-secondary bg-opacity-25 border border-secondary border-opacity-20">@proj.TechnologiesUsed</span></div>
+                                <div class="col-md-2 text-center text-white-50">@proj.Duration</div>
+                                <div class="col-md-2 text-end d-flex justify-content-end gap-3">
+                                    <a asp-action="EditProject" asp-route-id="@proj.Id" class="action-icon text-decoration-none" title="Edit project">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="DeleteProject" asp-route-id="@proj.Id" method="post" onsubmit="return confirm('Delete this project?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-icon text-danger border-0 bg-transparent p-0" title="Delete project">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Insertion Form -->
+            <div class="border-top border-secondary border-opacity-25 pt-4">
+                <h5 class="fw-bold text-primary font-monospace mb-4"> Add Project</h5>
+                <form asp-action="AddProject" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ResumeId" value="@resumeId" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="ProjectTitle" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Title" required />
+                                <label class="text-secondary">Project Title (e.g. Chat App)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="Duration" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Duration" required />
+                                <label class="text-secondary">Duration (e.g. Jan 2026 - Mar 2026)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="TechnologiesUsed" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Tech" required />
+                                <label class="text-secondary">Technologies Used (e.g. React,SQL Server)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="GitHubLink" type="url" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Link" />
+                                <label class="text-secondary">GitHub Repository Link (Optional)</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating text-dark">
+                                <textarea name="Description" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Description" style="height: 120px;" required></textarea>
+                                <label class="text-secondary">Brief description of project details, features, and your work...</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-outline-primary px-4 font-monospace hover-lift">
+                            Add Project 
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                <a asp-action="Skills" asp-route-resumeId="@resumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a asp-action="Experiences" asp-route-resumeId="@resumeId" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                    Save & Continue <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

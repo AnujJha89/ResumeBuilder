@@ -1,0 +1,70 @@
+@model ResumeBuilder.Web.ViewModels.SummaryViewModel
+@{
+    ViewData["Title"] = $"Edit Summary - {ViewBag.ResumeTitle}";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Professional Profile Summary</h3>
+                <p class="text-secondary">Provide your target career title and a brief background synopsis to pitch yourself to employers.</p>
+            </div>
+
+            <form asp-action="Summary" method="post" novalidate>
+                <input type="hidden" asp-for="ResumeId" />
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <!-- 1. Target Job Title -->
+                <div class="mb-4">
+                    <h5 class="fw-bold text-primary font-monospace mb-3"> 1. Target Job Title</h5>
+                    <div class="form-floating text-dark">
+                        <input asp-for="JobTitle" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Job Title" />
+                        <label asp-for="JobTitle" class="text-secondary">Target Job Title (e.g. Backend Developer, UI Designer)</label>
+                        <span asp-validation-for="JobTitle" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- 2. Profile Summary -->
+                <div class="mb-5">
+                    <h5 class="fw-bold text-primary font-monospace mb-3"> 2. Professional Summary</h5>
+                    <div class="form-floating text-dark">
+                        <textarea asp-for="ProfessionalSummary" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Professional Summary" style="height: 200px;"></textarea>
+                        <label asp-for="ProfessionalSummary" class="text-secondary">Brief synopsis of your qualifications, passions, and background...</label>
+                        <span asp-validation-for="ProfessionalSummary" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                    <a asp-action="Edit" asp-route-id="@Model.ResumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                        <i class="bi bi-arrow-left me-1"></i> Back
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                        Save & Continue <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

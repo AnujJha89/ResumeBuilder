@@ -1,0 +1,73 @@
+@using ResumeBuilder.Core.Entities
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+
+<!-- Hero Section - ChronoTask Inspired -->
+<div class="landing-hero">
+    <!-- Floating card: top-left -->
+    <div class="floating-card floating-card-tl" aria-hidden="true">
+        <div class="fc-inner">
+            <div class="fc-icon-badge" style="background: #e8f5e9;">
+                <i class="bi bi-file-earmark-text" style="color: #4caf50;"></i>
+            </div>
+            <div class="fc-label">LaTeX Powered</div>
+            <div class="fc-sublabel">Professional typesetting for<br>pixel-perfect resumes</div>
+        </div>
+    </div>
+
+    <!-- Floating card: top-right -->
+    <div class="floating-card floating-card-tr" aria-hidden="true">
+        <div class="fc-inner">
+            <div class="fc-icon-badge" style="background: #e3f2fd;">
+                <i class="bi bi-shield-check" style="color: #2196f3;"></i>
+            </div>
+            <div class="fc-label">ATS Friendly</div>
+            <div class="fc-sublabel">Optimized for applicant<br>tracking systems</div>
+        </div>
+    </div>
+
+    <!-- Main hero content -->
+    <div class="landing-hero-content">
+        <div class="hero-logo-mark">
+            <i class="bi bi-file-earmark-richtext"></i>
+        </div>
+
+        <h1 class="landing-headline">
+            Create, design, and share
+            <span class="landing-headline-accent">professional resumes</span>
+        </h1>
+
+        <p class="landing-subtext">
+            Build ATS-friendly, LaTeX-perfect resumes in minutes — no design skills required.
+        </p>
+
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-lg landing-cta">
+                Go to Dashboard
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg landing-cta">
+                Get Started Free
+            </a>
+        }
+    </div>
+
+    <!-- Floating card: bottom-left -->
+    <div class="floating-card floating-card-bl" aria-hidden="true">
+        <div class="fc-inner">
+            <div class="fc-label fw-semibold mb-2">Templates</div>
+            <img src="~/images/card_resume.png" alt="" class="fc-preview-img" />
+        </div>
+    </div>
+
+    <!-- Floating card: bottom-right -->
+    <div class="floating-card floating-card-br" aria-hidden="true">
+        <div class="fc-inner">
+            <div class="fc-label fw-semibold mb-2">ATS Score</div>
+            <img src="~/images/card_ats.png" alt="" class="fc-preview-img" />
+        </div>
+    </div>
+</div>

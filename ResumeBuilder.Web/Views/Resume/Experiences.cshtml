@@ -1,0 +1,173 @@
+@model IEnumerable<ResumeBuilder.Core.Entities.Experience>
+@{
+    var resumeId = (int)ViewBag.ResumeId;
+    ViewData["Title"] = $"Experience - {ViewBag.ResumeTitle}";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Professional Work Experience</h3>
+                <p class="text-secondary">Register internships, jobs, freelance, or research assistant roles that showcase your work qualifications.</p>
+            </div>
+
+            <!-- Existing Work History -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary font-monospace mb-3"> Current Work History</h5>
+                @if (Model == null || !Model.Any())
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 p-4 text-center">
+                        
+                        <p class="text-secondary mb-0">No job roles added yet. Register details using the form below.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 overflow-hidden">
+                        <div class="row notion-list-header px-4 pt-3 fw-bold small font-monospace">
+                            <div class="col-md-4">Company & Position</div>
+                            <div class="col-md-4">Date Interval</div>
+                            <div class="col-md-2 text-center">Status</div>
+                            <div class="col-md-2 text-end">Actions</div>
+                        </div>
+                        @foreach (var exp in Model)
+                        {
+                            <div class="row notion-row align-items-center px-4 font-monospace">
+                                <div class="col-md-4">
+                                    <span class="fw-bold text-white">@exp.Position</span>
+                                    <br /><span class="text-secondary small">@exp.CompanyName</span>
+                                </div>
+                                <div class="col-md-4 text-white-50">
+                                    @exp.StartDate.ToString("MMM yyyy") - @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    @if (exp.IsCurrent)
+                                    {
+                                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-20 small">Current</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-20 small">Ended</span>
+                                    }
+                                </div>
+                                <div class="col-md-2 text-end d-flex justify-content-end gap-3">
+                                    <a asp-action="EditExperience" asp-route-id="@exp.Id" class="action-icon text-decoration-none" title="Edit experience">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="DeleteExperience" asp-route-id="@exp.Id" method="post" onsubmit="return confirm('Delete this job?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-icon text-danger border-0 bg-transparent p-0" title="Delete job">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Insertion Form -->
+            <div class="border-top border-secondary border-opacity-25 pt-4">
+                <h5 class="fw-bold text-primary font-monospace mb-4"><i class="bi bi-plus-circle-fill me-1"></i> Add Professional Role</h5>
+                <form asp-action="AddExperience" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ResumeId" value="@resumeId" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="CompanyName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Company" required />
+                                <label class="text-secondary">Company Name (e.g. Google, Dev Studio)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="Position" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Position" required />
+                                <label class="text-secondary">Position / Role (e.g. Intern, Web Developer)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating text-dark">
+                                <input name="StartDate" type="date" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Start" required />
+                                <label class="text-secondary">Start Date</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating text-dark" id="endDateContainer">
+                                <input name="EndDate" type="date" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="End" />
+                                <label class="text-secondary">End Date</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <div class="form-check font-monospace ms-3">
+                                <input name="IsCurrent" type="checkbox" value="true" class="form-check-input bg-dark border-secondary" id="isCurrentCheckbox" />
+                                <label class="form-check-label text-white-50" for="isCurrentCheckbox">I currently work here</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating text-dark">
+                                <textarea name="Responsibilities" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Responsibilities" style="height: 120px;" required></textarea>
+                                <label class="text-secondary">Responsibilities & key achievements (one bullet per line recommended)...</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-outline-primary px-4 font-monospace hover-lift">
+                            Add Role 
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                <a asp-action="Projects" asp-route-resumeId="@resumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a asp-action="Certifications" asp-route-resumeId="@resumeId" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                    Save & Continue <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle end date disable when 'I currently work here' is checked
+        const isCurrentCheckbox = document.getElementById('isCurrentCheckbox');
+        const endDateContainer = document.getElementById('endDateContainer');
+        const endDateInput = endDateContainer.querySelector('input');
+
+        isCurrentCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                endDateInput.disabled = true;
+                endDateInput.value = '';
+                endDateContainer.classList.add('opacity-40');
+            } else {
+                endDateInput.disabled = false;
+                endDateContainer.classList.remove('opacity-40');
+            }
+        });
+    </script>
+}

@@ -1,0 +1,122 @@
+@{
+    var resumeId = ViewBag.ResumeId as int? ?? 0;
+    var activeTab = ViewBag.ActiveTab as string ?? "personal";
+    var resumeTitle = ViewBag.ResumeTitle as string ?? "New Resume";
+
+    // Helper to determine CSS classes for tabs
+    string TabClass(string tabName)
+    {
+        if (activeTab == tabName)
+        {
+            return "nav-link active bg-primary text-white";
+        }
+        if (resumeId == 0)
+        {
+            return "nav-link text-secondary disabled opacity-40";
+        }
+        return "nav-link text-secondary hover-white";
+    }
+}
+
+<div class="card bg-dark text-white border-0 rounded-4 shadow-sm p-4 h-100">
+    <div class="mb-3">
+        <a asp-controller="Dashboard" asp-action="Index" class="text-secondary text-decoration-none font-monospace small hover-white">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+        <h5 class="fw-bold mt-2 font-monospace text-white line-clamp-1">@resumeTitle</h5>
+    </div>
+    
+    <hr class="border-secondary mb-3 opacity-25" />
+
+    <div class="nav flex-column nav-pills gap-1.5 font-monospace">
+        <!-- 1 & 2. Personal Info -->
+        <a class="@TabClass("personal")" 
+           asp-controller="Resume" asp-action="Edit" asp-route-id="@resumeId">
+            <span><i class="bi bi-person-fill me-2"></i>I. Personal Info</span>
+            @if (resumeId > 0 && activeTab != "personal")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 3. Professional Summary -->
+        <a class="@TabClass("summary")" 
+           asp-controller="Resume" asp-action="Summary" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-chat-left-text-fill me-2"></i>II. Summary</span>
+            @if (resumeId > 0 && activeTab != "summary")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+        
+        <!-- 4. Education -->
+        <a class="@TabClass("education")" 
+           asp-controller="Resume" asp-action="Educations" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-mortarboard-fill me-2"></i>III. Education</span>
+            @if (resumeId > 0 && activeTab != "education")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 5. Skills -->
+        <a class="@TabClass("skills")" 
+           asp-controller="Resume" asp-action="Skills" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-tools me-2"></i>IV. Skills</span>
+            @if (resumeId > 0 && activeTab != "skills")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 6. Projects -->
+        <a class="@TabClass("projects")" 
+           asp-controller="Resume" asp-action="Projects" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-code-slash me-2"></i>V. Projects</span>
+            @if (resumeId > 0 && activeTab != "projects")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 7. Experience -->
+        <a class="@TabClass("experience")" 
+           asp-controller="Resume" asp-action="Experiences" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-briefcase-fill me-2"></i>VI. Experience</span>
+            @if (resumeId > 0 && activeTab != "experience")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 8. Certifications -->
+        <a class="@TabClass("certifications")" 
+           asp-controller="Resume" asp-action="Certifications" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-award-fill me-2"></i>VII. Certificates</span>
+            @if (resumeId > 0 && activeTab != "certifications")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 9. Achievements -->
+        <a class="@TabClass("achievements")" 
+           asp-controller="Resume" asp-action="Achievements" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-trophy-fill me-2"></i>VIII. Achievements</span>
+            @if (resumeId > 0 && activeTab != "achievements")
+            {
+                <i class="bi bi-check-circle-fill text-success small"></i>
+            }
+        </a>
+
+        <!-- 10. Preview PDF -->
+        <a class="@TabClass("preview")" 
+           asp-controller="Resume" asp-action="Preview" asp-route-resumeId="@resumeId">
+            <span><i class="bi bi-file-pdf-fill me-2"></i>IX. Preview PDF</span>
+            @if (resumeId > 0 && activeTab != "preview")
+            {
+                
+            }
+        </a>
+    </div>
+</div>

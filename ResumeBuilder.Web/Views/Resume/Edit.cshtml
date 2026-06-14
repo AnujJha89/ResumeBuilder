@@ -1,0 +1,447 @@
+@model ResumeBuilder.Web.ViewModels.ResumeEditorViewModel
+@{
+    ViewData["Title"] = $"Edit: {Model.Title}";
+    ViewBag.ResumeId = Model.Id;
+    ViewBag.ResumeTitle = Model.Title;
+    ViewBag.ActiveTab = "personal";
+
+    // Resolve currently selected template info for the active slot
+    var selectedTemplate = Model.AvailableTemplates?.FirstOrDefault(t => t.Id == Model.TemplateId);
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Personal &amp; Template Configuration</h3>
+                <p class="text-secondary">Set your resume identifier, choose a style template, and provide core contact coordinates.</p>
+            </div>
+
+            <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <!-- 1. Select Template — Active Slot + Carousel Trigger -->
+                <div class="mb-5">
+                    <h5 class="fw-bold text-primary font-monospace mb-3">1. Select Resume Template</h5>
+                    <span asp-validation-for="TemplateId" class="text-danger small d-block mb-3"></span>
+
+                    <!-- Hidden radio inputs (keep for form submission) -->
+                    @if (Model.AvailableTemplates != null)
+                    {
+                        foreach (var t in Model.AvailableTemplates)
+                        {
+                            <input type="radio" asp-for="TemplateId" value="@t.Id" class="d-none template-radio"
+                                   id="radio_@t.Id" checked="@(t.Id == Model.TemplateId ? "checked" : null)" />
+                        }
+                    }
+
+                    <!-- Active slot — clicking opens carousel -->
+                    <div class="template-active-slot @(selectedTemplate == null ? "slot-empty" : "")"
+                         id="templateActiveSlot"
+                         role="button"
+                         aria-label="Change resume template"
+                         tabindex="0"
+                         data-selected-id="@Model.TemplateId">
+
+                        @if (selectedTemplate != null)
+                        {
+                            <div class="slot-thumbnail" id="slotThumbnail">
+                                @if (!string.IsNullOrEmpty(selectedTemplate.ThumbnailPath))
+                                {
+                                    <img src="@selectedTemplate.ThumbnailPath" alt="@selectedTemplate.Name thumbnail" id="slotThumbImg" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-pdf" id="slotThumbIcon"></i>
+                                }
+                            </div>
+                            <div class="slot-info">
+                                <div class="slot-label">Active Template</div>
+                                <div class="slot-name" id="slotName">@selectedTemplate.Name</div>
+                                <div class="slot-desc" id="slotDesc"></div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="slot-thumbnail" id="slotThumbnail" style="display:none;"></div>
+                            <div class="slot-info">
+                                <div class="slot-label">No Template Selected</div>
+                                <div class="slot-name" id="slotName">Choose a Template</div>
+                                <div class="slot-desc" id="slotDesc">Click to browse available resume styles</div>
+                            </div>
+                        }
+
+                        <div class="slot-cta">
+                            <span>Browse</span>
+                            <span class="slot-cta-arrow"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Resume Title -->
+                <div class="mb-5">
+                    <h5 class="fw-bold text-primary font-monospace mb-3">2. Resume Identifier</h5>
+                    <div class="form-floating text-dark">
+                        <input asp-for="Title" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Resume Title" />
+                        <label asp-for="Title" class="text-secondary">Resume Title (e.g. Software Developer Resume)</label>
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- 3. Personal Info -->
+                <div class="mb-5">
+                    <h5 class="fw-bold text-primary font-monospace mb-3"> 3. Personal &amp; Contact Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="FullName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Full Name" />
+                                <label asp-for="FullName" class="text-secondary">Full Name</label>
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="Email" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Email" />
+                                <label asp-for="Email" class="text-secondary">Email Address</label>
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="Phone" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Phone" />
+                                <label asp-for="Phone" class="text-secondary">Phone Number</label>
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="Address" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Address" />
+                                <label asp-for="Address" class="text-secondary">Address (City, State, Country)</label>
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="GitHubUrl" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="GitHub URL" />
+                                <label asp-for="GitHubUrl" class="text-secondary">GitHub Profile URL (Optional)</label>
+                                <span asp-validation-for="GitHubUrl" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input asp-for="LinkedInUrl" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="LinkedIn URL" />
+                                <label asp-for="LinkedInUrl" class="text-secondary">LinkedIn Profile URL (Optional)</label>
+                                <span asp-validation-for="LinkedInUrl" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Profile Photo Upload -->
+                        <div class="col-12 mt-2">
+                            <div class="profile-upload-zone" id="profileUploadZone">
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    
+                                    <span class="fw-semibold" style="font-size:0.9rem;">Profile Photo</span>
+                                    
+                                </div>
+                                <div class="d-flex align-items-center gap-4 flex-wrap">
+                                    <div class="profile-pic-ring @(!string.IsNullOrEmpty(Model.ProfilePicturePath) ? "has-image" : "")"
+                                         id="profilePicRing">
+                                        @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+                                        {
+                                            <img src="@Model.ProfilePicturePath" id="profilePicPreview" alt="Profile photo" />
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-circle" id="profilePicPlaceholderIcon"></i>
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="text-secondary small mb-2">
+                                            Upload a square portrait. Recommended: PNG or JPG, max 2 MB.
+                                            <br/>The circular photo appears in the top-right of your generated PDF.
+                                        </div>
+                                        <label class="profile-upload-btn-label" for="profilePicInput">
+                                            <i class="bi bi-upload"></i>
+                                            @(!string.IsNullOrEmpty(Model.ProfilePicturePath) ? "Replace Photo" : "Choose Photo")
+                                        </label>
+                                        <input type="file" asp-for="ProfilePicture" accept="image/*" id="profilePicInput" style="display: none;" />
+                                        <span asp-validation-for="ProfilePicture" class="text-danger small d-block mt-1"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Actions -->
+                <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                        <i class="bi bi-x-circle me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                        Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================
+     TEMPLATE CAROUSEL OVERLAY
+     ====================================================== -->
+<div class="carousel-overlay" id="carouselOverlay" aria-modal="true" role="dialog" aria-label="Select Resume Template">
+    <div class="carousel-sheet" id="carouselSheet">
+        <!-- Drag handle -->
+        <div class="carousel-handle"></div>
+
+        <!-- Header -->
+        <div class="carousel-header">
+            <div class="carousel-header-title">
+                <i class="bi bi-palette-fill"></i>
+                Choose a Resume Template
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="carousel-nav">
+                    <div class="carousel-arrow" id="carouselPrev" title="Previous" role="button" aria-label="Scroll left">
+                        <i class="bi bi-chevron-left"></i>
+                    </div>
+                    <div class="carousel-arrow" id="carouselNext" title="Next" role="button" aria-label="Scroll right">
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+                <button class="carousel-close-btn" id="carouselCloseBtn" aria-label="Close template picker">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable track -->
+        <div class="carousel-track-wrapper">
+            <div class="carousel-track" id="carouselTrack">
+                @if (Model.AvailableTemplates != null)
+                {
+                    foreach (var template in Model.AvailableTemplates)
+                    {
+                        var isActive = template.Id == Model.TemplateId;
+                        <div class="carousel-card @(isActive ? "is-active" : "")"
+                             data-template-id="@template.Id"
+                             data-template-name="@template.Name"
+                             data-template-img="@template.ThumbnailPath"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Select @template.Name template"
+                             aria-pressed="@(isActive ? "true" : "false")">
+                            <div class="carousel-card-thumb">
+                                @if (!string.IsNullOrEmpty(template.ThumbnailPath))
+                                {
+                                    <img src="@template.ThumbnailPath" alt="@template.Name preview" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                }
+                            </div>
+                            <div class="carousel-card-body">
+                                <div class="carousel-card-name">@template.Name</div>
+                                <div class="carousel-card-check">
+                                    <i class="bi bi-check2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    (function () {
+        /* ── Template descriptions ─────────────────────────── */
+        const templateDescs = {
+            "Classic Minimalist":   "A timeless, single-column layout using Lora serif headings and Inter sans-serif body. Perfect for traditional, formal industries.",
+            "Modern Professional":  "A clean, asymmetric layout featuring professional blue highlights and a sidebar design. Supports circular profile photo.",
+            "Executive Elegant":    "A premium layout with deep navy blue and gold accents, using serif typography. Ideal for executives and leadership roles.",
+            "Tech Developer":       "A compact monospace layout with emerald green skill badges. Built for engineers.",
+            "Creative Portfolio":   "A vibrant layout with a pink/teal sidebar. Tailored for designers and marketing professionals.",
+            "Academic CV":          "A formal, high-density serif layout for research, CVs, and academic roles.",
+            "Stylish Minimal":      "A sleek, lightweight sans-serif layout with minimal accents for clean, modern aesthetics."
+        };
+
+        /* ── DOM refs ──────────────────────────────────────── */
+        const overlay       = document.getElementById('carouselOverlay');
+        const sheet         = document.getElementById('carouselSheet');
+        const track         = document.getElementById('carouselTrack');
+        const activeSlot    = document.getElementById('templateActiveSlot');
+        const slotName      = document.getElementById('slotName');
+        const slotDesc      = document.getElementById('slotDesc');
+        const slotThumbnail = document.getElementById('slotThumbnail');
+        const prevBtn       = document.getElementById('carouselPrev');
+        const nextBtn       = document.getElementById('carouselNext');
+        const closeBtn      = document.getElementById('carouselCloseBtn');
+        const cards         = track.querySelectorAll('.carousel-card');
+        const radios        = document.querySelectorAll('.template-radio');
+
+        /* ── Seed slot description on page load ────────────── */
+        const initName = slotName?.textContent?.trim();
+        if (initName && slotDesc) {
+            slotDesc.textContent = templateDescs[initName] || '';
+        }
+
+        /* ── Open / Close carousel ─────────────────────────── */
+        function openCarousel() {
+            overlay.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+
+            // Scroll the active card into center view
+            const activeCard = track.querySelector('.carousel-card.is-active');
+            if (activeCard) {
+                requestAnimationFrame(() => {
+                    const trackRect  = track.getBoundingClientRect();
+                    const cardRect   = activeCard.getBoundingClientRect();
+                    const scrollLeft = activeCard.offsetLeft - (trackRect.width / 2) + (cardRect.width / 2);
+                    track.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                });
+            }
+        }
+
+        function closeCarousel() {
+            overlay.classList.remove('is-open');
+            document.body.style.overflow = '';
+        }
+
+        activeSlot.addEventListener('click', openCarousel);
+        activeSlot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCarousel(); }});
+        closeBtn.addEventListener('click', closeCarousel);
+
+        // Close on backdrop click (not on sheet)
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeCarousel(); });
+
+        // Escape key
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeCarousel(); });
+
+        /* ── Arrow navigation ──────────────────────────────── */
+        const SCROLL_STEP = 220;
+        prevBtn.addEventListener('click', () => track.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' }));
+        nextBtn.addEventListener('click', () => track.scrollBy({ left:  SCROLL_STEP, behavior: 'smooth' }));
+
+        /* ── Select a template ─────────────────────────────── */
+        function selectTemplate(card) {
+            const id   = card.getAttribute('data-template-id');
+            const name = card.getAttribute('data-template-name');
+            const img  = card.getAttribute('data-template-img') || '';
+
+            // Update hidden radio
+            radios.forEach(r => { r.checked = r.value === id; });
+
+            // Update active-slot visual
+            slotName.textContent = name;
+            if (slotDesc) slotDesc.textContent = templateDescs[name] || '';
+
+            if (slotThumbnail) {
+                slotThumbnail.style.display = '';
+                let imgEl = slotThumbnail.querySelector('img');
+                let iconEl = slotThumbnail.querySelector('i');
+                if (img) {
+                    if (!imgEl) {
+                        imgEl = document.createElement('img');
+                        imgEl.id = 'slotThumbImg';
+                        slotThumbnail.innerHTML = '';
+                        slotThumbnail.appendChild(imgEl);
+                    }
+                    imgEl.src = img;
+                    imgEl.alt = name + ' thumbnail';
+                    if (iconEl) iconEl.remove();
+                } else {
+                    if (!iconEl) {
+                        slotThumbnail.innerHTML = '<i class="bi bi-file-earmark-pdf" id="slotThumbIcon"></i>';
+                    }
+                    if (imgEl) imgEl.remove();
+                }
+            }
+
+            // Remove empty-state class from slot
+            activeSlot.classList.remove('slot-empty');
+
+            // Update carousel card states
+            cards.forEach(c => {
+                const isThis = c.getAttribute('data-template-id') === id;
+                c.classList.toggle('is-active', isThis);
+                c.setAttribute('aria-pressed', isThis ? 'true' : 'false');
+            });
+
+            // Pop animation + close
+            card.classList.add('selecting');
+            card.addEventListener('animationend', () => card.classList.remove('selecting'), { once: true });
+
+            setTimeout(closeCarousel, 240);
+        }
+
+        cards.forEach(card => {
+            card.addEventListener('click', () => selectTemplate(card));
+            card.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectTemplate(card); }
+            });
+        });
+
+        /* ── Profile Photo Preview ─────────────────────────── */
+        const profileInput  = document.getElementById('profilePicInput');
+        const profileRing   = document.getElementById('profilePicRing');
+        const uploadZone    = document.getElementById('profileUploadZone');
+
+        if (profileInput && profileRing) {
+            profileInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    profileRing.innerHTML = `<img src="${e.target.result}" id="profilePicPreview" alt="Profile photo" />`;
+                    profileRing.classList.add('has-image');
+                    // Update button label text node
+                    const btnLabel = document.querySelector('.profile-upload-btn-label');
+                    if (btnLabel) {
+                        btnLabel.childNodes.forEach(n => {
+                            if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+                                n.textContent = ' Replace Photo';
+                            }
+                        });
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Drag-over visual feedback
+            uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+            uploadZone.addEventListener('drop', e => {
+                e.preventDefault();
+                uploadZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) {
+                    profileInput.files = e.dataTransfer.files;
+                    profileInput.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+    })();
+    </script>
+}

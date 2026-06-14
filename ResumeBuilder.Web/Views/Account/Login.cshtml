@@ -1,0 +1,86 @@
+@model ResumeBuilder.Web.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="row justify-content-center align-items-center min-vh-75 py-4">
+    <div class="col-lg-10 col-xl-9">
+        <div class="card shadow-lg border-0 theme-split-card overflow-hidden">
+            <div class="row g-0">
+                <!-- Left Brand & Gradient Panel -->
+                <div class="col-md-5 split-left-panel text-white p-5 d-flex flex-column justify-content-center text-center">
+                    <div class="py-4 my-auto">
+                        <p class="mb-1 text-uppercase tracking-wider small opacity-75">Welcome to</p>
+                        <h2 class="fw-bold fs-2 luxury-heading mb-0 text-white">ResumeBuilder</h2>
+                    </div>
+                </div>
+
+                <!-- Right Sign-In Form Panel -->
+                <div class="col-md-7 split-right-panel p-5 d-flex flex-column justify-content-center">
+                    <div class="mb-4">
+                        <h3 class="fw-bold luxury-heading fs-2 mb-1">Sign In</h3>
+                        <p class="text-secondary small mb-0">Access your professional resume manager</p>
+                    </div>
+
+                    <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <!-- Email Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="Email" class="form-control form-underline" placeholder="name@example.com" />
+                            <label asp-for="Email">Email Address</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Password Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="Password" class="form-control form-underline" placeholder="Password" />
+                            <label asp-for="Password">Password</label>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Keep me signed in -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" asp-for="RememberMe" />
+                            <label class="form-check-label text-secondary small" asp-for="RememberMe">
+                                Keep me signed in
+                            </label>
+                        </div>
+
+                        <!-- Buttons Row (mockup style: solid primary and light outline) -->
+                        <div class="d-flex gap-3 mb-4 flex-wrap">
+                            <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold hover-lift flex-grow-1">
+                                Sign In
+                            </button>
+                            <a asp-action="Register" class="btn btn-outline-light px-4 py-2.5 rounded-3 fw-semibold hover-lift flex-grow-1 text-center">
+                                Sign Up
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Google Authentication -->
+                    <div class="divider text-muted small text-center mb-3">
+                        <span>or continue with</span>
+                    </div>
+
+                    <form asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                        <input type="hidden" name="provider" value="Google" />
+                        <button type="submit" class="btn btn-outline-light w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 hover-lift">
+                            <svg width="18" height="18" viewBox="0 0 18 18">
+                                <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.72v2.24h2.9c1.7-1.57 2.7-3.88 2.7-6.59z"/>
+                                <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.2l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.59-5.05-3.73H.95v2.3C2.43 15.93 5.48 18 9 18z"/>
+                                <path fill="#FBBC05" d="M3.95 10.7c-.18-.54-.28-1.12-.28-1.7s.1-1.16.28-1.7V5H.95C.34 6.2 0 7.56 0 9s.34 2.8 1 4l2.95-2.3z"/>
+                                <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.1C13.46.67 11.43 0 9 0 5.48 0 2.43 2.07.95 5.07l2.95 2.3c.71-2.14 2.7-3.79 5.05-3.79z"/>
+                            </svg>
+                            Sign in with Google
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

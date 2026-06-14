@@ -1,0 +1,142 @@
+@model IEnumerable<ResumeBuilder.Core.Entities.Certification>
+@{
+    var resumeId = (int)ViewBag.ResumeId;
+    ViewData["Title"] = $"Certifications - {ViewBag.ResumeTitle}";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm bg-success text-white font-monospace mb-4 animate__animated animate__fadeIn" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Certifications & Awards</h3>
+                <p class="text-secondary">List credentials, courses, and certifications that validate your technical background skills.</p>
+            </div>
+
+            <!-- Existing Entries -->
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary font-monospace mb-3"> Current Certifications</h5>
+                @if (Model == null || !Model.Any())
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 p-4 text-center">
+                        <i class="bi bi-info-circle text-secondary display-6 mb-2 d-block"></i>
+                        <p class="text-secondary mb-0">No certifications added yet. Add them below using the form.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="bg-black bg-opacity-20 border border-secondary border-opacity-25 rounded-4 overflow-hidden">
+                        <div class="row notion-list-header px-4 pt-3 fw-bold small font-monospace">
+                            <div class="col-md-4">Certificate Name</div>
+                            <div class="col-md-4">Issuer</div>
+                            <div class="col-md-2 text-center">Issue Date</div>
+                            <div class="col-md-2 text-end">Actions</div>
+                        </div>
+                        @foreach (var cert in Model)
+                        {
+                            <div class="row notion-row align-items-center px-4 font-monospace">
+                                <div class="col-md-4">
+                                    <span class="fw-bold text-white">@cert.CertificateName</span>
+                                    @if (!string.IsNullOrEmpty(cert.CredentialUrl))
+                                    {
+                                        <br /><a href="@cert.CredentialUrl" target="_blank" class="text-primary text-decoration-none small hover-white" style="font-size: 0.8rem;"><i class="bi bi-link-45deg me-1"></i>Verify</a>
+                                    }
+                                </div>
+                                <div class="col-md-4 text-white-50">@cert.IssuingOrganization</div>
+                                <div class="col-md-2 text-center text-white-50">@cert.IssueDate.ToString("MMM yyyy")</div>
+                                <div class="col-md-2 text-end d-flex justify-content-end gap-3">
+                                    <a asp-action="EditCertification" asp-route-id="@cert.Id" class="action-icon text-decoration-none" title="Edit certificate">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="DeleteCertification" asp-route-id="@cert.Id" method="post" onsubmit="return confirm('Delete this certificate?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-icon text-danger border-0 bg-transparent p-0" title="Delete certificate">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Insertion Form -->
+            <div class="border-top border-secondary border-opacity-25 pt-4">
+                <h5 class="fw-bold text-primary font-monospace mb-4">Add Certification</h5>
+                <form asp-action="AddCertification" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ResumeId" value="@resumeId" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="CertificateName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Certificate Name" required />
+                                <label class="text-secondary">Certificate Name (e.g. AWS Cloud Practitioner)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating text-dark">
+                                <input name="IssuingOrganization" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Issuer" required />
+                                <label class="text-secondary">Issuing Organization (e.g. Amazon, Coursera)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating text-dark">
+                                <input name="IssueDate" type="date" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Date" required />
+                                <label class="text-secondary">Issue Date</label>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-floating text-dark">
+                                <input name="CredentialUrl" type="url" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Url" />
+                                <label class="text-secondary">Credential Validation URL (Optional)</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating text-dark">
+                                <textarea name="Description" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Description" style="height: 120px;" required></textarea>
+                                <label class="text-secondary">Short description details or key topics learned...</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-outline-primary px-4 font-monospace hover-lift">
+                            Add Certification <i class="bi bi-plus-lg ms-1"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-4 mt-5">
+                <a asp-action="Experiences" asp-route-resumeId="@resumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <a asp-action="Achievements" asp-route-resumeId="@resumeId" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                    Save & Continue <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

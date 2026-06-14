@@ -1,0 +1,8 @@
+@using Microsoft.AspNetCore.Identity
+@using ResumeBuilder.Core.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    ViewData["Title"] = "Professional LaTeX Resume Builder";
+}
+
+@await Html.PartialAsync("_HomeHero")

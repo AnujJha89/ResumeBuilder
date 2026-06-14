@@ -1,0 +1,74 @@
+@model ResumeBuilder.Web.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Sign Up";
+}
+
+<div class="row justify-content-center align-items-center min-vh-75 py-4">
+    <div class="col-lg-10 col-xl-9">
+        <div class="card shadow-lg border-0 theme-split-card overflow-hidden">
+            <div class="row g-0">
+                <!-- Left Brand & Gradient Panel -->
+                <div class="col-md-5 split-left-panel text-white p-5 d-flex flex-column justify-content-center text-center">
+                    <div class="py-4 my-auto">
+                        <p class="mb-1 text-uppercase tracking-wider small opacity-75">Welcome to</p>
+                        <h2 class="fw-bold fs-2 luxury-heading mb-0 text-white">ResumeBuilder</h2>
+                    </div>
+                </div>
+
+                <!-- Right Sign-Up Form Panel -->
+                <div class="col-md-7 split-right-panel p-5 d-flex flex-column justify-content-center">
+                    <div class="mb-4">
+                        <h3 class="fw-bold luxury-heading fs-2 mb-1">Create Account</h3>
+                        <p class="text-secondary small mb-0">Begin building your professional resume</p>
+                    </div>
+
+                    <form asp-action="Register" method="post" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <!-- Full Name Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="FullName" class="form-control form-underline" placeholder="John Doe" />
+                            <label asp-for="FullName">Full Name</label>
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Email Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="Email" class="form-control form-underline" placeholder="name@example.com" />
+                            <label asp-for="Email">Email Address</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Password Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="Password" class="form-control form-underline" placeholder="Password" />
+                            <label asp-for="Password">Password</label>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Confirm Password Input Underline -->
+                        <div class="form-floating underline-floating mb-4">
+                            <input asp-for="ConfirmPassword" class="form-control form-underline" placeholder="Confirm Password" />
+                            <label asp-for="ConfirmPassword">Confirm Password</label>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Buttons Row (mockup style: solid primary and light outline) -->
+                        <div class="d-flex gap-3 mb-0 flex-wrap">
+                            <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-3 fw-semibold hover-lift flex-grow-1">
+                                Sign Up
+                            </button>
+                            <a asp-action="Login" class="btn btn-outline-light px-4 py-2.5 rounded-3 fw-semibold hover-lift flex-grow-1 text-center">
+                                Sign In
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

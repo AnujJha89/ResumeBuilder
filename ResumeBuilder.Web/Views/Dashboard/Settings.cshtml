@@ -1,0 +1,171 @@
+@model ResumeBuilder.Web.ViewModels.SettingsViewModel
+@using Microsoft.AspNetCore.Identity
+@using ResumeBuilder.Core.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Account Settings";
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
+}
+
+<div class="row min-vh-75 mt-4">
+    <div class="col-md-3 mb-4">
+        <partial name="_Sidebar" />
+    </div>
+
+    <div class="col-md-9">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4 animate__animated animate__fadeIn" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card border-0 rounded-4 shadow-sm p-5">
+            <h2 class="fw-bold tracking-tight mb-2 luxury-heading fs-1">Account Settings</h2>
+            <p class="text-secondary mb-4">Modify your profile metrics and change your authentication credentials.</p>
+
+            <form asp-controller="Dashboard" asp-action="Settings" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-4"></div>
+
+                <!-- Profile Information -->
+                <h5 class="fw-bold text-primary mb-3">Profile Information</h5>
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="FullName" class="form-control rounded-3" placeholder="Full Name" />
+                            <label asp-for="FullName">Full Name</label>
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="Email" class="form-control rounded-3" placeholder="Email" />
+                            <label asp-for="Email">Email Address</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="PhoneNumber" class="form-control rounded-3" placeholder="Phone Number" />
+                            <label asp-for="PhoneNumber">Phone Number</label>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-secondary mb-4" />
+
+                <!-- Theme Preference Settings -->
+                <h5 class="fw-bold text-primary mb-3">Theme Settings</h5>
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <div class="card p-3 border border-secondary border-opacity-25 rounded-3 bg-transparent shadow-none">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">Appearance</h6>
+                                    <p class="text-secondary small mb-0">Select your preferred color mode</p>
+                                </div>
+                                <div class="btn-group" role="group" aria-label="Theme selection">
+                                    <input type="radio" class="btn-check" name="theme-select" id="theme-light" autocomplete="off" value="light">
+                                    <label class="btn btn-outline-primary py-2 px-3 d-flex align-items-center gap-1" for="theme-light">
+                                        <i class="bi bi-sun-fill"></i> Light
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="theme-select" id="theme-dark" autocomplete="off" value="dark">
+                                    <label class="btn btn-outline-primary py-2 px-3 d-flex align-items-center gap-1" for="theme-dark">
+                                        <i class="bi bi-moon-fill"></i> Dark
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-secondary mb-4" />
+
+                <!-- Security / Change Password -->
+                <h5 class="fw-bold text-primary mb-3">Change Password <span class="text-secondary small fw-normal">(Leave blank to keep current)</span></h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="CurrentPassword" class="form-control rounded-3" placeholder="Current Password" />
+                            <label asp-for="CurrentPassword">Current Password</label>
+                            <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="NewPassword" class="form-control rounded-3" placeholder="New Password" />
+                            <label asp-for="NewPassword">New Password</label>
+                            <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="ConfirmPassword" class="form-control rounded-3" placeholder="Confirm Password" />
+                            <label asp-for="ConfirmPassword">Confirm Password</label>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-5 border-top border-secondary border-opacity-25 pt-4">
+                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-light px-4 py-3 rounded-3">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-5 py-3 rounded-3 fw-semibold hover-lift">
+                        Save Settings <i class="bi bi-save ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lightRadio = document.getElementById('theme-light');
+            const darkRadio = document.getElementById('theme-dark');
+            
+            // Load initial state
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+            if (currentTheme === 'dark') {
+                darkRadio.checked = true;
+            } else {
+                lightRadio.checked = true;
+            }
+            
+            // Listen for changes
+            function handleThemeChange(e) {
+                const theme = e.target.value;
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                // Sync the layout header toggle icon
+                const layoutIcon = document.getElementById('themeToggleIcon');
+                if (layoutIcon) {
+                    layoutIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+                }
+            }
+            
+            lightRadio.addEventListener('change', handleThemeChange);
+            darkRadio.addEventListener('change', handleThemeChange);
+            
+            // Listen for layout toggle events to keep settings radios in sync
+            window.addEventListener('themeChanged', () => {
+                const theme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+                if (theme === 'dark') {
+                    darkRadio.checked = true;
+                } else {
+                    lightRadio.checked = true;
+                }
+            });
+        });
+    </script>
+}

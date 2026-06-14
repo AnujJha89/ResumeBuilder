@@ -1,0 +1,82 @@
+@model ResumeBuilder.Web.ViewModels.SkillViewModel
+@{
+    ViewBag.ResumeId = Model.ResumeId;
+    ViewBag.ActiveTab = "skills";
+    ViewData["Title"] = $"Edit Skill - {ViewBag.ResumeTitle}";
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Edit Skill Details</h3>
+                <p class="text-secondary">Update the category, name, or proficiency of the selected technical skill tag below.</p>
+            </div>
+
+            <form asp-controller="Resume" asp-action="EditSkill" asp-route-id="@Model.Id" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ResumeId" />
+                <input type="hidden" asp-for="DisplayOrder" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="form-floating text-dark">
+                            <input asp-for="SkillName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Skill Name" />
+                            <label asp-for="SkillName" class="text-secondary">Skill Name (e.g. C#)</label>
+                            <span asp-validation-for="SkillName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating text-dark">
+                            <select asp-for="SkillCategory" class="form-select bg-transparent text-white border-secondary rounded-3">
+                                <option value="Languages">Languages</option>
+                                <option value="Frameworks">Frameworks</option>
+                                <option value="Databases">Databases</option>
+                                <option value="Tools">Tools</option>
+                            </select>
+                            <label asp-for="SkillCategory" class="text-secondary">Category Group</label>
+                            <span asp-validation-for="SkillCategory" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-floating text-dark">
+                            <select asp-for="Proficiency" class="form-select bg-transparent text-white border-secondary rounded-3">
+                                <option value="">No proficiency</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                                <option value="Expert">Expert</option>
+                            </select>
+                            <label asp-for="Proficiency" class="text-secondary">Proficiency Level</label>
+                            <span asp-validation-for="Proficiency" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-4 border-top border-secondary border-opacity-25 pt-4">
+                    <a asp-controller="Resume" asp-action="Skills" asp-route-resumeId="@Model.ResumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                        Save Changes 
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

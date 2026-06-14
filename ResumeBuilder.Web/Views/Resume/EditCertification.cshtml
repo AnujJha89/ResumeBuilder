@@ -1,0 +1,85 @@
+@model ResumeBuilder.Web.ViewModels.CertificationViewModel
+@{
+    ViewBag.ResumeId = Model.ResumeId;
+    ViewBag.ActiveTab = "certifications";
+    ViewData["Title"] = $"Edit Certification - {ViewBag.ResumeTitle}";
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <!-- Editor Sidebar -->
+        <partial name="_WizardSidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5">
+            <!-- Progress Tracker -->
+            <partial name="_WizardProgress" />
+
+            <div class="mb-4">
+                <h3 class="fw-bold tracking-tight">Edit Certification Details</h3>
+                <p class="text-secondary">Modify the certificate name, issuer, issue date, credential URL, or description details below.</p>
+            </div>
+
+            <form asp-controller="Resume" asp-action="EditCertification" asp-route-id="@Model.Id" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="ResumeId" />
+                <input type="hidden" asp-for="DisplayOrder" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating text-dark">
+                            <input asp-for="CertificateName" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Certificate Name" />
+                            <label asp-for="CertificateName" class="text-secondary">Certificate / Award Name</label>
+                            <span asp-validation-for="CertificateName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating text-dark">
+                            <input asp-for="IssuingOrganization" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Issuer" />
+                            <label asp-for="IssuingOrganization" class="text-secondary">Issuing Organization (e.g. AWS)</label>
+                            <span asp-validation-for="IssuingOrganization" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating text-dark">
+                            <input asp-for="IssueDate" type="date" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Date" />
+                            <label asp-for="IssueDate" class="text-secondary">Issue Date</label>
+                            <span asp-validation-for="IssueDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-floating text-dark">
+                            <input asp-for="CredentialUrl" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Credential URL" />
+                            <label asp-for="CredentialUrl" class="text-secondary">Credential Validation URL (Optional)</label>
+                            <span asp-validation-for="CredentialUrl" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-floating text-dark">
+                            <textarea asp-for="Description" class="form-control bg-transparent text-white border-secondary rounded-3" placeholder="Description" style="height: 150px;"></textarea>
+                            <label asp-for="Description" class="text-secondary">Short description details...</label>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-4 border-top border-secondary border-opacity-25 pt-4">
+                    <a asp-controller="Resume" asp-action="Certifications" asp-route-resumeId="@Model.ResumeId" class="btn btn-outline-light px-4 py-2.5 rounded-3 font-monospace">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 py-2.5 rounded-3 fw-semibold font-monospace hover-lift">
+                        Save Changes 
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

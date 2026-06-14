@@ -1,0 +1,170 @@
+@model IEnumerable<ResumeBuilder.Core.Entities.Resume>
+@using Microsoft.AspNetCore.Identity
+@using ResumeBuilder.Core.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "My Resumes";
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
+}
+
+<div class="row min-vh-75 mt-4 text-white">
+    <div class="col-md-3 mb-4">
+        <partial name="_Sidebar" />
+    </div>
+
+    <div class="col-md-9">
+        <!-- Dashboard Header -->
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-5 mb-4">
+            <h1 class="fw-bold tracking-tight mb-2">My Resumes</h1>
+            <p class="text-secondary mb-4">Build and edit your ATS-friendly resumes compiled dynamically with LaTeX.</p>
+
+            <div>
+                <a asp-controller="Resume" asp-action="Create" class="btn btn-primary px-4 py-3 rounded-3 fw-semibold hover-lift font-monospace">
+                    <i class="bi bi-plus-lg me-1"></i> Create New Resume
+                </a>
+            </div>
+        </div>
+
+        <!-- Resumes List -->
+        <div class="card border-0 bg-dark text-white rounded-4 shadow-sm p-4">
+            <h5 class="fw-semibold mb-4 font-monospace">Recent Resumes</h5>
+            
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-secondary border border-secondary border-dashed rounded-4">
+                    <i class="bi bi-file-earmark-text display-4 mb-3 text-muted"></i>
+                    <p class="mb-0">You haven't created any resumes yet.</p>
+                    <p class="small text-muted mb-0">Click the button above to construct your first ATS-friendly CV!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 g-4" id="resumes-container">
+                    @foreach (var resume in Model)
+                    {
+                        <div class="col resume-card-col" data-resume-id="@resume.Id">
+                            <div class="card bg-black bg-opacity-40 border border-secondary border-opacity-50 rounded-4 h-100 p-4 transition-all hover-glow">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="fw-bold mb-1 text-white">@resume.Title</h5>
+                                        <span class="badge bg-secondary font-monospace">@resume.JobTitle</span>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical fs-5"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end rounded-3">
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Resume" asp-action="Edit" asp-route-id="@resume.Id">
+                                                    <i class="bi bi-pencil-fill me-2 small"></i> Edit Resume
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider border-secondary"></li>
+                                            <li>
+                                                <button type="button" class="dropdown-item text-danger delete-resume-btn" 
+                                                        data-resume-id="@resume.Id" 
+                                                        data-url="@Url.Action("Delete", "Resume", new { id = resume.Id })">
+                                                    <i class="bi bi-trash-fill me-2 small"></i> Delete
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-4 line-clamp-3">@resume.ProfessionalSummary</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <span class="text-muted small font-monospace">
+                                        Updated: @resume.UpdatedAt.ToLocalTime().ToString("MMM dd, yyyy")
+                                    </span>
+                                    <div class="d-flex gap-2">
+                                        <a asp-controller="Resume" asp-action="Edit" asp-route-id="@resume.Id" class="btn btn-sm btn-outline-light px-3 rounded-3 font-monospace">
+                                            Open
+                                        </a>
+                                        <a asp-controller="Resume" asp-action="DownloadPdf" asp-route-resumeId="@resume.Id" class="btn btn-sm btn-outline-primary px-3 rounded-3 font-monospace">
+                                            <i class="bi bi-file-pdf"></i> PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div id="antiforgery-token-container" style="display:none;">
+    @Html.AntiForgeryToken()
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete-resume-btn');
+            deleteButtons.forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const resumeId = this.getAttribute('data-resume-id');
+                    const deleteUrl = this.getAttribute('data-url');
+                    
+                    if (!confirm('Are you sure you want to delete this resume?')) {
+                        return;
+                    }
+                    
+                    const tokenElement = document.querySelector('#antiforgery-token-container input[name="__RequestVerificationToken"]');
+                    const token = tokenElement ? tokenElement.value : '';
+                    
+                    try {
+                        const response = await fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'RequestVerificationToken': token,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            // Find parent column card
+                            const cardCol = this.closest('.resume-card-col');
+                            if (cardCol) {
+                                // Animate card deletion
+                                cardCol.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                                cardCol.style.opacity = '0';
+                                cardCol.style.transform = 'scale(0.9) translateY(10px)';
+                                
+                                setTimeout(() => {
+                                    cardCol.remove();
+                                    
+                                    // If no cards left, swap container to show empty state dynamically
+                                    const remainingCards = document.querySelectorAll('.resume-card-col');
+                                    if (remainingCards.length === 0) {
+                                        const wrapper = document.getElementById('resumes-container');
+                                        if (wrapper) {
+                                            wrapper.outerHTML = `
+                                                <div class="text-center py-5 text-secondary border border-secondary border-dashed rounded-4">
+                                                    <i class="bi bi-file-earmark-text display-4 mb-3 text-muted"></i>
+                                                    <p class="mb-0">You haven't created any resumes yet.</p>
+                                                    <p class="small text-muted mb-0">Click the button above to construct your first ATS-friendly CV!</p>
+                                                </div>
+                                            `;
+                                        } else {
+                                            location.reload();
+                                        }
+                                    }
+                                }, 400);
+                            }
+                        } else {
+                            alert('Failed to delete resume. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting resume:', error);
+                        alert('An error occurred while deleting the resume.');
+                    }
+                });
+            });
+        });
+    </script>
+}
