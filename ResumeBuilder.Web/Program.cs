@@ -16,7 +16,16 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    if (connectionString.Contains("Host=") || connectionString.Contains("port=") || connectionString.Contains("sslmode="))
+    {
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("ResumeBuilder.Infrastructure"));
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Register Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -28,12 +37,15 @@ builder.Services.AddScoped<IPdfService, PdfService>();
 
 // Download Chromium for PuppeteerSharp if not already cached
 // This runs once at startup so the first PDF request isn't slow.
-var browserFetcherTask = Task.Run(async () =>
+// Skip if using a pre-installed Chromium path (e.g. in Docker).
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PUPPETEER_EXECUTABLE_PATH")))
 {
-    var fetcher = new BrowserFetcher();
-    await fetcher.DownloadAsync();
-});
-// Fire-and-forget: don't block startup
+    var browserFetcherTask = Task.Run(async () =>
+    {
+        var fetcher = new BrowserFetcher();
+        await fetcher.DownloadAsync();
+    });
+}
 
 // Register ASP.NET Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

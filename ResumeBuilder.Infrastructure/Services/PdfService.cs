@@ -38,20 +38,34 @@ namespace ResumeBuilder.Infrastructure.Services
             {
                 _logger.LogInformation("Starting PDF generation for resume ID: {ResumeId}", resume.Id);
 
-                // Step 1: Ensure Chromium is downloaded (only downloads once, then cached)
-                var browserFetcher = new BrowserFetcher();
-                await browserFetcher.DownloadAsync();
-                _logger.LogInformation("Chromium browser ready.");
+                // Step 1: Ensure Chromium is ready (use pre-installed path if provided, otherwise download)
+                var executablePath = Environment.GetEnvironmentVariable("PUPPETEER_EXECUTABLE_PATH");
+                if (string.IsNullOrEmpty(executablePath))
+                {
+                    var browserFetcher = new BrowserFetcher();
+                    await browserFetcher.DownloadAsync();
+                    _logger.LogInformation("Chromium browser downloaded and ready.");
+                }
+                else
+                {
+                    _logger.LogInformation("Using pre-installed Chromium at: {Path}", executablePath);
+                }
 
                 // Step 2: Build the HTML string for the resume
                 var htmlContent = BuildResumeHtml(resume);
 
                 // Step 3: Launch headless Chrome
-                await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+                var launchOptions = new LaunchOptions
                 {
                     Headless = true,
-                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
-                });
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage" }
+                };
+                if (!string.IsNullOrEmpty(executablePath))
+                {
+                    launchOptions.ExecutablePath = executablePath;
+                }
+
+                await using var browser = await Puppeteer.LaunchAsync(launchOptions);
 
                 // Step 4: Open a new browser page (like a tab)
                 await using var page = await browser.NewPageAsync();
