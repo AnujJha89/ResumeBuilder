@@ -2,13 +2,13 @@
 
 A professional, feature-rich ASP.NET Core Web application designed to help users build, customize, and download high-quality resumes. Built with clean architecture principles and modern styling refinements.
 
-## 🤝 Contributors
+## Contributors
 - **Anuj Kumar Jha** - [@AnujJha89](https://github.com/AnujJha89)
 - **Khushdeep** - [@Khushdeep00978](https://github.com/Khushdeep00978)
 
 ---
 
-## 🛠️ Prerequisites & Setup Guide
+## Prerequisites & Setup Guide
 
 To run this project locally, you need to have the following tools and packages installed.
 
@@ -23,23 +23,23 @@ To run this project locally, you need to have the following tools and packages i
 ### 2. NuGet Packages Used
 All packages are automatically restored upon building the application. Below are the key packages referenced in the solution:
 
-* **Web Project (`ResumeBuilder.Web`)**:
+* **Web Project (ResumeBuilder.Web)**:
   - `Microsoft.AspNetCore.Authentication.Google` (v8.0.11) - Google OAuth integrations
   - `Microsoft.EntityFrameworkCore.Design` (v8.0.11) - EF Core design-time tools
 
-* **Infrastructure Project (`ResumeBuilder.Infrastructure`)**:
+* **Infrastructure Project (ResumeBuilder.Infrastructure)**:
   - `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (v8.0.11) - Identity & user management
   - `Microsoft.EntityFrameworkCore` (v8.0.11) - ORM framework
   - `Microsoft.EntityFrameworkCore.SqlServer` (v8.0.11) - SQL Server database provider
   - `Microsoft.EntityFrameworkCore.Tools` (v8.0.11) - EF Core package manager commands
   - `PuppeteerSharp` (v20.0.2) - Headless Chrome API wrapper for converting HTML resumes to PDF
 
-* **Core Project (`ResumeBuilder.Core`)**:
+* **Core Project (ResumeBuilder.Core)**:
   - `Microsoft.Extensions.Identity.Stores` (v8.0.11) - Identity store abstractions
 
 ---
 
-## 🚀 How to Run the Project Locally
+## How to Run the Project Locally
 
 Follow these steps to set up and start the application on your local machine:
 
@@ -56,7 +56,7 @@ dotnet restore
 ```
 
 ### Step 3: Run Database Migrations
-Apply the EF Core migrations to create your local SQL database (`ResumeBuilderDb`):
+Apply the EF Core migrations to create your local SQL database (ResumeBuilderDb):
 ```bash
 dotnet ef database update --project ResumeBuilder.Infrastructure --startup-project ResumeBuilder.Web
 ```
@@ -67,8 +67,8 @@ Start the web application:
 dotnet run --project ResumeBuilder.Web
 ```
 
-The app will compile and start. Open your browser and navigate to the local HTTPS URL shown in your console (usually `https://localhost:7196` or similar).
+The app will compile and start. Open your browser and navigate to the local HTTPS URL shown in your console (usually https://localhost:7196 or similar).
 
 ---
 
-*Made with ❤️ to simplify professional resume creation.*
+*Made to simplify professional resume creation.*
